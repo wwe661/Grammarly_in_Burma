@@ -14,9 +14,9 @@ async function login() {
 
     if (u === username && p === password && role === mode) {
       if (role === "user") {
-        window.location.href = "usermode/static/index.html";
+        window.location.href = "usermode/index.html";
       } else {
-        window.location.href = "learningmode/static/index.html";
+        window.location.href = "learningmode/index.html";
       }
       return;
     }

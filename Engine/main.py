@@ -82,6 +82,19 @@ def extra_check_for_syllable(flags):
     flags = [newflags[i] for i in sorted(newflags.keys())]   
     return flags
 
+def check_uncertain(tokens):
+    for i in range(1,4):
+        grams = tokens[3-i:3+i+1]
+        for j in range(i+1):
+            _ = ""
+            # _ = grams[j]["message"]+grams[j+1]["message"]
+            for k in range(i+1):
+                _ =_ + grams[k+j]["message"]
+            status = check_token(_)
+            if status == "known":
+                return _,i,j
+    return None,None,None
+
 def extra_check_for_word(flags):
     newflags = {i:j for i,j in enumerate(flags)}
     skip_for = 0
@@ -140,17 +153,4 @@ def is_burmese_token(token):
         return False
 
     return burmese_chars / total_chars > 0.6
-
-def check_uncertain(tokens):
-    for i in range(1,4):
-        grams = tokens[3-i:3+i+1]
-        for j in range(i+1):
-            _ = ""
-            # _ = grams[j]["message"]+grams[j+1]["message"]
-            for k in range(i+1):
-                _ =_ + grams[k+j]["message"]
-            status = check_token(_)
-            if status == "known":
-                return _,i,j
-    return None,None,None
 
