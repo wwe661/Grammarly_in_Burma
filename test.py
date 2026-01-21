@@ -1,4 +1,4 @@
-from learningmode.dictionary import load_all_dictionaries
+from Engine.dictionary import load_all_dictionaries
 import csv
 
 a,b = load_all_dictionaries()
