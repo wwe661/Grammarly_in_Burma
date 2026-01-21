@@ -2,25 +2,501 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Login</title>
-    <link rel="stylesheet" href="style.css" />
+    <link
+      id="favicon"
+      rel="icon"
+      href="Logo&Pics/mainlogo.png"
+      type="image/png"
+    />
+    <title>Grammarly In Burma</title>
+    <style>
+      :root {
+        /* LIGHT MODE */
+        --bg: #f2f6f4; /* pale neutral background */
+        --bodybg: #e6f2ed;
+        --panel: #ffffff; /* white panels */
+        --green: #1a8f50; /* softer green for text/buttons */
+        --green-soft: #57c17d; /* gradient accent for walls */
+        --text: #1f2933; /* dark text instead of neon green */
+        --shadow: rgba(0, 0, 0, 0.1); /* softer shadows for light bg */
+        --wall-bg: linear-gradient(
+          180deg,
+          #57c17d,
+          #a2e5b3
+        ); /* subtle light wall gradient */
+        --glow-color: rgba(26, 143, 80, 0.4); /* glow tuned for light bg */
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1f2933;
+          --bodybg: #1b2430;
+          --panel: #263241;
+          --green: #3cff6f;
+          --green-soft: #2bd65f;
+          --text: #e6ffe6;
+          --shadow: rgba(0, 0, 0, 0.35);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(
+          180deg,
+          var(--bodybg),
+          var(--bg)
+        ); /* pale gradient for light mode */
+        /* background: linear-gradient(180deg, #1b2430, var(--bg)); */
+        color: var(--text);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        padding: 16px 24px;
+        text-align: center;
+        border-bottom: 1px solid rgba(60, 255, 111, 0.25);
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 28px;
+        letter-spacing: 1px;
+        color: var(--green);
+        text-shadow: 0 0 12px rgba(60, 255, 111, 0.4);
+      }
+      .logo-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .logo-icon {
+        height: 30px;
+        border: 2px solid var(--green);
+        border-radius: 10px;
+        filter: drop-shadow(0 0 8px rgba(60, 255, 111, 0.5));
+      }
+
+      .logo-text {
+        font-size: 26px;
+        color: var(--green);
+        letter-spacing: 1px;
+        text-shadow: 0 0 12px rgba(60, 255, 111, 0.4);
+      }
+
+      .mode-switch {
+        margin-top: 10px;
+      }
+
+      .mode-switch button {
+        background: transparent;
+        border: 1px solid var(--green);
+        color: var(--green);
+        padding: 6px 14px;
+        border-radius: 999px;
+        margin: 0 6px;
+        cursor: pointer;
+        box-shadow: 0 0 8px rgba(60, 255, 111, 0.25);
+      }
+
+      .mode-switch button.active {
+        background: var(--green);
+        color: #0f1720;
+      }
+
+      .container {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 14px 1fr;
+        gap: 0;
+        padding: 20px;
+        transition: all 0.3s ease;
+      }
+
+      /* Trainer mode expands the wall */
+      /* Trainer mode: wider wall, equal input/output */
+      .trainer .container {
+        grid-template-columns: 1fr 140px 1fr;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid rgba(60, 255, 111, 0.25);
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 30px var(--shadow);
+        overflow: hidden;
+      }
+
+      .panel textarea,
+      .panel .output {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: 16px;
+        resize: none;
+        color: var(--text);
+        font-size: 15px;
+        line-height: 1.6;
+        outline: none;
+      }
+
+      .panel textarea::placeholder {
+        color: rgba(230, 255, 230, 0.45);
+      }
+
+      .panel-footer {
+        display: flex;
+        gap: 10px;
+        padding: 12px;
+        border-top: 1px solid rgba(60, 255, 111, 0.25);
+      }
+
+      .btn {
+        flex: 1;
+        background: transparent;
+        border: 1px solid var(--green);
+        color: var(--green);
+        padding: 10px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        box-shadow: 0 6px 16px var(--shadow);
+        transition: all 0.2s ease;
+      }
+
+      .btn:hover {
+        background: rgba(60, 255, 111, 0.1);
+      }
+
+      .btn.primary {
+        background: var(--green);
+        color: #0f1720;
+        font-weight: 600;
+      }
+
+      .wall {
+        background: var(--wall-bg);
+        border-radius: 8px;
+        box-shadow: 0 0 25px var(--glow-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+      }
+
+      /* Trainer wall becomes credential gate */
+      /* Trainer wall becomes credential gate */
+      .trainer .wall {
+        background: var(--bg);
+        border: 5px solid var(--green);
+        box-shadow: 0 0 36px rgba(60, 255, 111, 0.8);
+      }
+
+      .credentials {
+        display: none;
+        width: 100%;
+        padding: 16px;
+      }
+
+      .trainer .credentials {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .credentials h3 {
+        margin: 0 0 6px 0;
+        text-align: center;
+        color: var(--green);
+        font-size: 16px;
+      }
+
+      .credentials input {
+        background: transparent;
+        border: 1px solid var(--green);
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 8px;
+        outline: none;
+      }
+
+      .credentials input::placeholder {
+        color: rgba(230, 255, 230, 0.45);
+      }
+
+      .output span.underlined {
+        position: relative;
+        padding-bottom: 2px;
+      }
+
+      .output span.underlined .message {
+        display: none;
+        position: absolute;
+        left: 0;
+        top: 100%;
+        background: #0f1720;
+        color: var(--green);
+        padding: 6px 10px;
+        border-radius: 6px;
+        white-space: nowrap;
+        font-size: 12px;
+        box-shadow: 0 6px 18px var(--shadow);
+        z-index: 10;
+      }
+
+      .output span.underlined:hover .message {
+        display: block;
+      }
+
+      @keyframes wallGlow {
+        0% {
+          box-shadow: 0 0 15px var(--glow-color);
+        }
+        50% {
+          box-shadow:
+            0 0 30px var(--glow-color),
+            0 0 50px rgba(26, 143, 80, 0.25);
+        }
+        100% {
+          box-shadow: 0 0 15px var(--glow-color);
+        }
+      }
+
+      .wall.glow {
+        animation: wallGlow 0.9s ease-in-out;
+      }
+    </style>
   </head>
-  <body>
-    <div class="login-box">
-      <h2>Login</h2>
+  <body class="user">
+    <header>
+      <div class="logo-wrap">
+        <span class="logo-text">Grammarly In Burma</span>
+        <img
+          id="logo"
+          src="Logo&Pics/mainlogo.png"
+          alt="Grammerly In Burma"
+          class="logo-icon"
+        />
+      </div>
+      <div class="mode-switch">
+        <button id="userBtn" class="active" onclick="setMode('user')">
+          User Mode
+        </button>
+        <button id="trainerBtn" onclick="setMode('trainer')">
+          Trainer Mode
+        </button>
+      </div>
+    </header>
 
-      <input id="username" type="text" placeholder="Username" />
-      <input id="password" type="password" placeholder="Password" />
+    <div class="container">
+      <!-- Input Panel -->
+      <div class="panel">
+        <textarea
+          id="textInput"
+          placeholder="မြန်မာစာကို ဒီမှာ ရိုက်ထည့်ပါ…"
+        ></textarea>
+        <div class="panel-footer">
+          <button class="btn primary" onclick="checkText()">Submit</button>
+          <button class="btn" onclick="pasteInput()">Paste</button>
+          <button class="btn" onclick="clearInput()">Clear</button>
+        </div>
+      </div>
 
-      <select id="mode">
-        <option value="user">User Mode</option>
-        <option value="trainer">Trainer Mode</option>
-      </select>
+      <!-- Wall -->
+      <div class="wall">
+        <div class="credentials">
+          <h3>Trainer Access</h3>
+          <input type="text" id="trainerUser" placeholder="Username" />
+          <input type="password" id="trainerPass" placeholder="Password" />
+          <button
+            class="btn primary"
+            style="padding: 14px; font-size: 15px"
+            onclick="trainerLogin()"
+          >
+            Unlock
+          </button>
+        </div>
+      </div>
 
-      <button onclick="login()">Login</button>
-      <p id="error"></p>
+      <!-- Output Panel -->
+      <div class="panel">
+        <div id="result" class="output">Output will appear here…</div>
+        <div class="panel-footer">
+          <button class="btn primary" onclick="copyResult()">Copy</button>
+          <button class="btn" onclick="downloadResult()">Download</button>
+          <button class="btn" onclick="clearResult()">Reset</button>
+        </div>
+      </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+      function updateFavicon() {
+        const isDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+        const favicon = document.getElementById("favicon");
+        favicon.href = isDark
+          ? "Logo&Pics/mainlogo_dark.png"
+          : "Logo&Pics/mainlogo.png";
+      }
+
+      // run once on load
+      updateFavicon();
+
+      // update if user switches theme while browsing
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", updateFavicon);
+
+      function applyTheme() {
+        const isDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+        const logo = document.getElementById("logo");
+
+        if (!logo) return;
+
+        logo.src = isDark
+          ? "Logo&Pics/mainlogo_dark.png"
+          : "Logo&Pics/mainlogo.png";
+      }
+
+      // run on load
+      applyTheme();
+
+      // listen for system changes live
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", applyTheme);
+
+      let sending_mode = "user";
+
+      function setMode(mode) {
+        document.body.className = mode;
+        document
+          .getElementById("userBtn")
+          .classList.toggle("active", mode === "user");
+        document
+          .getElementById("trainerBtn")
+          .classList.toggle("active", mode === "trainer");
+        if (mode === "user") {
+          sending_mode = "user";
+        }
+      }
+
+      //   function trainerLogin() {
+      //     const u = document.getElementById("trainerUser").value;
+      //     const p = document.getElementById("trainerPass").value;
+
+      //     if (!u || !p) {
+      //       alert("Trainer credentials required");
+      //       return;
+      //     }
+
+      //     alert("Trainer mode unlocked (UI only)");
+      //   }
+      async function trainerLogin() {
+        const username = document.getElementById("trainerUser").value;
+        const password = document.getElementById("trainerPass").value;
+
+        if (!username || !password) {
+          alert("Trainer credentials required");
+          return;
+        }
+
+        const response = await fetch("users.txt");
+        const text = await response.text();
+
+        const trainers = text.trim().split("\n");
+
+        for (let trainer of trainers) {
+          const [u, p] = trainer.split(",");
+
+          if (u === username && p === password) {
+            alert("Trainer mode unlocked");
+            sending_mode = "trainer";
+            return;
+          }
+        }
+        alert("Invalid trainer credentials");
+      }
+
+      function clearInput() {
+        document.getElementById("textInput").value = "";
+      }
+      async function pasteInput() {
+        try {
+          const text = await navigator.clipboard.readText();
+          document.getElementById("textInput").value = text;
+        } catch (err) {
+          alert("Clipboard access denied");
+        }
+      }
+
+      function clearResult() {
+        document.getElementById("result").innerHTML =
+          "Output will appear here…";
+      }
+
+      async function copyResult() {
+        const text = document.getElementById("result").innerText;
+        await navigator.clipboard.writeText(text);
+        alert("Copied to clipboard");
+      }
+
+      function downloadResult() {
+        const text = document.getElementById("result").innerText;
+        const blob = new Blob([text], { type: "text/plain" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "grammerly_result.txt";
+        a.click();
+      }
+
+      async function checkText() {
+        const wall = document.querySelector(".wall");
+        wall.classList.remove("glow"); // reset if clicked fast
+        void wall.offsetWidth; // force reflow
+        wall.classList.add("glow");
+
+        const text = document.getElementById("textInput").value;
+        console.log("Input text:", text);
+        const response = await fetch("http://127.0.0.1:8000/checkfromtrainer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+
+        const data = await response.json();
+
+        console.log("Flags received:", data.flags);
+
+        let newtext = "";
+
+        for (const flag of data.flags) {
+          const { start, end, message, color } = flag;
+          console.log(message);
+          // keep untouched text before the error
+          //   newtext += text.slice(lastIndex, start);
+
+          newtext += `<span class="underlined"
+         style = "color: ${color}; text-decoration: underline ${color} wavy;">
+         ${message}<p class="message">${message}</p></span>`;
+        }
+        // keep remaining text after last flag
+        // newtext += text.slice(lastIndex);
+
+        document.getElementById("result").innerHTML = newtext;
+      }
+    </script>
   </body>
 </html>

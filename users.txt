@@ -1,2 +1,1 @@
-user,123,user
-trainer,tt123,trainer
+trainer,tt123
