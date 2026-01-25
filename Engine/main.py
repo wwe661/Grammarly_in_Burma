@@ -26,59 +26,72 @@ def home():
     with open("static/index.html", "r", encoding="utf-8") as f:
         return f.read()
 # DictA,DictB = load_all_dictionaries()
-dictionary = load_dictionary()
+import unicodedata
+
+def normalize_mm(text):
+    return unicodedata.normalize("NFC", text)
+
+dictionary = set(normalize_mm(w) for w in load_dictionary())
+
+# dictionary = load_dictionary()
 
 @app.post("/checkfromtrainer")
 def check_text(data: TextInput):
     tokens = tokenize_text(data.text, form="word")
-
+    for t in tokens:
+        t["norm"] = normalize_mm(t["message"])
+        
     flags = []
     for t in tokens:
-        status = check_token(t['message'].strip())
+        status = check_token(t['norm'].strip())
     
         if status == "unknown":
             color = "red"
         elif status == "non-burmese":
-            color = "gray"
+            color = "default"
         else:
-            color = "green"
-
+            color = "#3cff6f"
         flags.append({
             "start": t["start"],
             "end": t["end"],
             "message": t['message'],
-            "status": status,
-            "color": color
-        })
-    # flags = extra_check_for_syllable(flags)
-    flags = extra_check_for_word(flags)
-    return { "flags": flags }
-
-@app.post("/checkfromuser")
-def check_text(data: TextInput):
-    tokens = tokenize_text(data.text, form="word")
-
-    flags = []
-    for t in tokens:
-        status = check_token(t['message'].strip())
-    
-        if status == "unknown":
-            color = "red"
-        elif status == "non-burmese":
-            color = "gray"
-        else:
-            color = "green"
-
-        flags.append({
-            "start": t["start"],
-            "end": t["end"],
-            "message": t['message'],
+            "norm": t['norm'],
             "status": status,
             "color": color
         })
     # flags = extra_check_for_syllable(flags)
     # flags = extra_check_for_word(flags)
-    return { "flags": flags }
+    normalized = normalize_mm(data.text)
+    return {"normalized":normalized, "flags": flags }
+
+@app.post("/checkfromuser")
+def check_text(data: TextInput):
+    tokens = tokenize_text(data.text, form="word")
+    for t in tokens:
+        t["norm"] = normalize_mm(t["message"])
+    flags = []
+    for t in tokens:
+        status = check_token(t['norm'].strip())
+
+        # if status == "unknown":
+        #     color = "red"
+        # elif status == "non-burmese":
+        #     color = "gray"
+        # else:
+        #     color = "#3cff6f"
+
+        flags.append({
+            "start": t["start"],
+            "end": t["end"],
+            "message": t['message'],
+            "norm": t['norm'],
+            "status": status,
+            "color": "default"
+        })
+    # flags = extra_check_for_syllable(flags)
+    # flags = extra_check_for_word(flags)
+    normalized = normalize_mm(data.text)
+    return { "normalized":normalized,"flags": flags }
 
 def extra_check_for_syllable(flags):
     newflags = {i:j for i,j in enumerate(flags)}
@@ -97,7 +110,7 @@ def extra_check_for_syllable(flags):
                 for x in range(i-j+k, i+k+1):
                     message += flags[x]["message"]
                 status = check_token(message)
-                color = "green"
+                color = "#3cff6f"
                 _ = {"start": start, "end": end, "message": message, "status": status, "color": color}
                 for a in range(i-j+k, i+k+1):
                     newflags.pop(a)
@@ -132,8 +145,7 @@ def extra_check_for_word(flags):
         print(f"Checking token at index {i}: {flags[i]['message']}")
         # 1. Extract window
         window, w_start, w_end = get_window(flags, i, radius=1)
-        window_text = "".join(tok["message"] for tok in window)
-
+        window_text = normalize_mm("".join(tok["message"] for tok in window))
         # 2. Syllable tokenize window
         syllables = tokenize_text(
             window_text,
@@ -174,7 +186,7 @@ def extra_check_for_word(flags):
 
         for word,typ in best:
             if typ == "dict":
-                color = "green"
+                color = "#3cff6f"
             else:
                 color = "red"
             length = len(word)
@@ -273,8 +285,13 @@ def is_burmese_token(token):
 
 def get_window(flags, i, radius=1):
     start = max(0, i - radius)
+    if not is_burmese_token(flags[start]["message"]):
+        start = i
     end = min(len(flags), i + radius + 1)
+    if not is_burmese_token(flags[end]["message"]):
+        end = i
     return flags[start:end], start, end
+
 def generate_candidates(syllables, max_n=4):
     candidates = []
     n = len(syllables)

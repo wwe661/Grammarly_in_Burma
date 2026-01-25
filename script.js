@@ -89,6 +89,10 @@ function clearInput() {
 async function pasteInput() {
   try {
     const text = await navigator.clipboard.readText();
+    if (text.length === 0) {
+      alert("Clipboard is empty");
+      return;
+    }
     document.getElementById("textInput").value = text;
   } catch (err) {
     alert("Clipboard access denied");

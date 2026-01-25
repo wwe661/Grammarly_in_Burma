@@ -1,6 +1,7 @@
 from pyidaungsu import tokenize
 
 def tokenize_text(text,form="word",return_type="flags"):
+    # print(text)
     tokens = tokenize(text, form=form)
     result = []
     cursor = 0
@@ -13,6 +14,7 @@ def tokenize_text(text,form="word",return_type="flags"):
                 start = cursor
                 error = True
             end = start + len(tok)
+            
             result.append({
                 "message": tok,
                 "start": start,

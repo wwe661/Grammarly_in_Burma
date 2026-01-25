@@ -75,13 +75,39 @@
     </div>
 
     <script>
+      // function normalizeInput(text) {
+      //   return text.normalize("NFC");
+      // }
+
+      function hasnonEscape(str) {
+        // Tests if the single character is NOT a whitespace character.
+        // return !/\s/.test(char);
+        for (let i = 0; i < str.length; i++) {
+          const char = str[i];
+          if (!/\s/.test(char)) {
+            return true; // Found a non-whitespace character
+          }
+        }
+        // Alternatively, you could test for presence of a non-whitespace character:
+        // return /\S/.test(char); // This works too for a single char.
+      }
       async function checkText() {
         animateWall();
-
-        console.log("Sending mode :" + sending_mode);
+        const isDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
 
         const text = document.getElementById("textInput").value;
-        console.log("Input text:", text);
+        // const sourceText = normalizeInput(text);
+        // console.log("Input text:", sourceText);
+        // const segmenter = new Intl.Segmenter("my", { granularity: "grapheme" });
+
+        // function toGraphemes(text) {
+        //   return [...segmenter.segment(text)];
+        // }
+
+        // const graphemes = toGraphemes(sourceText);
+        sending_mode = "trainer";
         const url = "http://127.0.0.1:8000/checkfrom" + sending_mode;
         console.log("Request URL:", url);
         const response = await fetch(url, {
@@ -93,21 +119,38 @@
         const data = await response.json();
 
         console.log("Flags received:", data.flags);
+        const { normalized, flags } = data;
 
         let newtext = "";
+        let lastIndex = 0;
 
         for (const flag of data.flags) {
-          const { start, end, message, color } = flag;
-          console.log(message);
-          // keep untouched text before the error
-          //   newtext += text.slice(lastIndex, start);
+          const { start, end, message, norm, status, color } = flag;
 
-          newtext += `<span class="underlined"
-         style = "color: ${color}; text-decoration: underline ${color} wavy;">
-         ${message}<p class="message">${message}</p></span>`;
+          // append untouched text
+          // test = hasnonEscape(text.slice(lastIndex, start));
+          // newtext +=
+          //   sending_mode == "user"
+          //     ? test
+          //       ? ""
+          //       : text.slice(lastIndex, start)
+          //     : text.slice(lastIndex, start);
+          newtext += `<span style="background:red">${normalized.slice(lastIndex, start)}</span>`;
+          const segment = normalized.slice(start, end);
+          console.log("Segment:", segment);
+          console.log(start, end);
+          _ = `<span class="underlined" style="text-decoration: underline ${color};">`;
+          _ += `${segment}${message ? `<span class="message">${message}</span>` : ""}</span>`;
+
+          newtext += sending_mode == "user" ? norm : _;
+
+          lastIndex = end;
         }
-        // keep remaining text after last flag
-        // newtext += text.slice(lastIndex);
+
+        // append remaining text
+        newtext += text.slice(lastIndex);
+
+        // result.innerHTML = newtext;
 
         document.getElementById("result").innerHTML = newtext;
       }

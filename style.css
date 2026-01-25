@@ -107,6 +107,7 @@ header h1 {
   gap: 0;
   padding: 20px;
   transition: all 0.3s ease;
+  overflow: auto;
 }
 
 /* Trainer mode expands the wall */
@@ -123,6 +124,7 @@ header h1 {
   flex-direction: column;
   box-shadow: 0 10px 30px var(--shadow);
   overflow: hidden;
+  min-height: 0;
 }
 
 .panel textarea,
@@ -134,8 +136,13 @@ header h1 {
   resize: none;
   color: var(--text);
   font-size: 15px;
-  line-height: 1.6;
+  /* line-height: 1.6; */
   outline: none;
+  height: 100%;
+  overflow-y: auto;
+  min-height: 0; /* 👈 also required in some browsers */
+  white-space: pre-wrap; /* preserves \n and spaces */
+  word-break: break-word;
 }
 
 .panel textarea::placeholder {
