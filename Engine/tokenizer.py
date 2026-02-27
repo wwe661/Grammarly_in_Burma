@@ -25,3 +25,6 @@ def tokenize_text(text,form="word",return_type="flags"):
     elif return_type == "tokens":
         result = tokens
     return result
+
+res = tokenize_text("ဆရာ စာသင်သောအခါကျွန်တော်နှင့်မောင်မောင်တို့သည်ဂရုတစိုက်နားထောင်မှတ်သားကြသည်။")
+print(res)

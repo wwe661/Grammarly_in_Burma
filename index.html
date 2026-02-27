@@ -75,9 +75,9 @@
     </div>
 
     <script>
-      // function normalizeInput(text) {
-      //   return text.normalize("NFC");
-      // }
+      function normalizeInput(text) {
+        return text.normalize("NFC");
+      }
 
       function hasnonEscape(str) {
         // Tests if the single character is NOT a whitespace character.
@@ -97,8 +97,10 @@
           "(prefers-color-scheme: dark)",
         ).matches;
 
+        // document.getElementById("result").innerHTML = "Generating...";
+
         const text = document.getElementById("textInput").value;
-        // const sourceText = normalizeInput(text);
+        const sourceText = normalizeInput(text);
         // console.log("Input text:", sourceText);
         // const segmenter = new Intl.Segmenter("my", { granularity: "grapheme" });
 
@@ -107,51 +109,63 @@
         // }
 
         // const graphemes = toGraphemes(sourceText);
-        sending_mode = "trainer";
+        // sending_mode = "trainer";
         const url = "http://127.0.0.1:8000/checkfrom" + sending_mode;
         console.log("Request URL:", url);
         const response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text: sourceText }),
         });
 
         const data = await response.json();
 
         console.log("Flags received:", data.flags);
+        console.log("Normalized text:", data.normalized);
         const { normalized, flags } = data;
 
         let newtext = "";
         let lastIndex = 0;
+        if (sending_mode == "user") {
+          newtext = normalized;
+        } else {
+          for (const flag of data.flags) {
+            const {
+              start,
+              end,
+              message,
+              norm,
+              status,
+              color,
+              suggestions,
+              best,
+            } = flag;
 
-        for (const flag of data.flags) {
-          const { start, end, message, norm, status, color } = flag;
+            // append untouched text
+            // test = hasnonEscape(text.slice(lastIndex, start));
+            // newtext +=
+            //   sending_mode == "user"
+            //     ? test
+            //       ? ""
+            //       : text.slice(lastIndex, start)
+            //     : text.slice(lastIndex, start);
+            newtext += `<span style="background:red">${normalized.slice(lastIndex, start)}</span>`;
+            const segment = normalized.slice(start, end);
+            // console.log("Segment:", segment);
+            // console.log(start, end);
+            _ = `<span class="underlined" style="text-decoration: underline ${color};">`;
+            _ += `${segment}${message ? `<span class="message">${message}</span>` : ""}</span>`;
 
-          // append untouched text
-          // test = hasnonEscape(text.slice(lastIndex, start));
-          // newtext +=
-          //   sending_mode == "user"
-          //     ? test
-          //       ? ""
-          //       : text.slice(lastIndex, start)
-          //     : text.slice(lastIndex, start);
-          newtext += `<span style="background:red">${normalized.slice(lastIndex, start)}</span>`;
-          const segment = normalized.slice(start, end);
-          console.log("Segment:", segment);
-          console.log(start, end);
-          _ = `<span class="underlined" style="text-decoration: underline ${color};">`;
-          _ += `${segment}${message ? `<span class="message">${message}</span>` : ""}</span>`;
+            newtext += sending_mode == "user" ? (best ? best : norm) : _;
 
-          newtext += sending_mode == "user" ? norm : _;
+            lastIndex = end;
+          }
 
-          lastIndex = end;
+          // append remaining text
+          newtext += text.slice(lastIndex);
+
+          // result.innerHTML = newtext;
         }
-
-        // append remaining text
-        newtext += text.slice(lastIndex);
-
-        // result.innerHTML = newtext;
-
         document.getElementById("result").innerHTML = newtext;
       }
     </script>

@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.concurrency import asynccontextmanager
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -6,7 +7,19 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from tokenizer import tokenize_text
 from dictionary import *
-app = FastAPI()
+import testingseg 
+
+from difflib import SequenceMatcher
+
+def similarity(a, b):
+    return SequenceMatcher(None, a, b).ratio()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    testingseg.initialize_model()
+    yield
+    
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,8 +36,9 @@ class TextInput(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 def home():
-    with open("static/index.html", "r", encoding="utf-8") as f:
+    with open("./index.html", "r", encoding="utf-8") as f:
         return f.read()
+    
 # DictA,DictB = load_all_dictionaries()
 import unicodedata
 
@@ -71,26 +85,36 @@ def check_text(data: TextInput):
         t["norm"] = normalize_mm(t["message"])
     flags = []
     for t in tokens:
-        status = check_token(t['norm'].strip())
-
+        status ,suggestions= check_token(t['norm'].strip())
+        if suggestions: print(suggestions[0][0])
         # if status == "unknown":
         #     color = "red"
         # elif status == "non-burmese":
         #     color = "gray"
         # else:
         #     color = "#3cff6f"
-
+        if suggestions:
+            t["suggestions"] = suggestions
+            t["best"] = suggestions[0][0]
+            print(t["best"])
+        else:
+            t["suggestions"] = None
+            t["best"] = None
+            
         flags.append({
             "start": t["start"],
             "end": t["end"],
             "message": t['message'],
             "norm": t['norm'],
             "status": status,
-            "color": "default"
+            "color": "default",
+            "suggestions" : t["suggestions"],
+            "best" : t["best"]
         })
     # flags = extra_check_for_syllable(flags)
     # flags = extra_check_for_word(flags)
     normalized = normalize_mm(data.text)
+    normalized = apply_corrections(normalized, flags)
     return { "normalized":normalized,"flags": flags }
 
 def extra_check_for_syllable(flags):
@@ -255,11 +279,13 @@ def extra_check_for_word(flags):
 
 def check_token(token):
     if not is_burmese_token(token):
-        return "non-burmese"
+        return "non-burmese",None
     elif token in dictionary:
-        return "known"
-    else:
-        return "unknown"
+        return "known",None
+    print("getting suggestions for: ",token)
+    suggestions = get_suggestions(token,dictionary)
+    print(suggestions)
+    return "unknown",suggestions
     
 def is_burmese_char(ch):
     code = ord(ch)
@@ -307,6 +333,7 @@ def generate_candidates(syllables, max_n=4):
                 candidates.append((i, j, word, "error"))
 
     return candidates
+
 def segment(syllables, candidates):
     index_map = {}
     for i, j, w, t in candidates:
@@ -345,3 +372,24 @@ def score(seg):
         errors * 20,       # penalize errors
         length             # prefer fewer tokens
     )
+
+def get_suggestions(token, dictionary, k=3, threshold=0.6):
+    scored = []
+
+    for w in dictionary:
+        s = similarity(token, w)
+        if s >= threshold:
+            scored.append((w, s))
+
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return scored[:k]
+
+def apply_corrections(text, flags):
+    out = text
+
+    # reverse order so indices don't break
+    for f in sorted(flags, key=lambda x: x["start"], reverse=True):
+        if f.get("best"):
+            out = out[:f["start"]] + f["best"] + out[f["end"]:]
+
+    return out
